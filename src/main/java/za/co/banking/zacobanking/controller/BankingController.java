@@ -16,6 +16,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping(value = "banking-api")
+@CrossOrigin(origins = "*")
 public class BankingController {
 
     private static Logger logger = LoggerFactory.getLogger(BankingController.class);
