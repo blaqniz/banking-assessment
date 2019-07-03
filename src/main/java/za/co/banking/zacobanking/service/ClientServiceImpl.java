@@ -183,10 +183,14 @@ public class ClientServiceImpl implements ClientService {
         for (int i = 0; i < bankNotes.length; i++) {
             final double bankNote = bankNotes[i];
             if (withdrawalAmount >= bankNote) {
-                /*if (isNoteOrCoinAvailable(BigDecimal.valueOf(bankNote), atmAllocations)) {
+
+
+                if (isNoteOrCoinAvailable(BigDecimal.valueOf(bankNote), atmAllocations)) {
                     noteCounter[i] = (int) (withdrawalAmount / bankNote);
                     withdrawalAmount = Double.valueOf(decimalFormat.format(withdrawalAmount - (noteCounter[i] * bankNote)));
-                }*/
+                }
+
+
                 noteCounter[i] = (int) (withdrawalAmount / bankNote);
                 withdrawalAmount = Double.valueOf(decimalFormat.format(withdrawalAmount - (noteCounter[i] * bankNote)));
             }
