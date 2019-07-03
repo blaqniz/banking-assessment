@@ -212,24 +212,34 @@ public class ClientServiceImpl implements ClientService {
             final double bankNote = bankNotes[i];
             if (withdrawalAmount >= bankNote) {
                 int amountToDeplete = (int) (withdrawalAmount / bankNote);
-                final boolean noteOrCoinAvailable = isNoteOrCoinAvailable(BigDecimal.valueOf(bankNote), atmAllocations, amountToDeplete);
-                if (noteOrCoinAvailable) {
-                    noteCounter[i] = amountToDeplete;
-                    response.getNotesMap().put(String.valueOf(bankNote), String.valueOf(noteCounter[i]));
-                    withdrawalAmount = Double.valueOf(decimalFormat.format(withdrawalAmount - (noteCounter[i] * bankNote)));
+                int depleteCounter = 0;
+                for (int j = 1; j <= amountToDeplete; j++) {
+                    final boolean noteOrCoinAvailable = isNoteOrCoinAvailable(BigDecimal.valueOf(bankNote), atmAllocations, amountToDeplete);
+                    if (noteOrCoinAvailable) {
+                        depleteCounter++;
+                        noteCounter[i] = amountToDeplete;
+                        response.getNotesMap().put(String.valueOf(bankNote), String.valueOf(depleteCounter));
+                        withdrawalAmount = Double.valueOf(decimalFormat.format(withdrawalAmount - (bankNote)));
+                    } else {
+                        break;
+                    }
                 }
-
-                /*noteCounter[i] = (int) (withdrawalAmount / bankNote);
-                response.getNotesMap().put(String.valueOf(bankNote), String.valueOf(noteCounter[i]));
-                withdrawalAmount = Double.valueOf(decimalFormat.format(withdrawalAmount - (noteCounter[i] * bankNote)));*/
             }
         }
         return response;
     }
 
     private boolean isNoteOrCoinAvailable(BigDecimal bankNote, List<AtmAllocation> atmAllocations, int amountToDeplete) {
-        return atmAllocations.stream().filter(atmAllocation -> atmAllocation.getCount() >= amountToDeplete
-                && atmAllocation.getDenomination().getValue().compareTo(bankNote) == 0).findFirst().isPresent();
+        for (AtmAllocation atmAllocation : atmAllocations) {
+            if (atmAllocation.getCount() >= 1
+                    && atmAllocation.getDenomination().getValue().compareTo(bankNote) == 0) {
+                if (atmAllocation.getCount() < amountToDeplete) {
+                    return false;
+                }
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
@@ -265,7 +275,6 @@ public class ClientServiceImpl implements ClientService {
             } else {
                 clients.remove(client);
             }
-
         }
         return clients;
     }
