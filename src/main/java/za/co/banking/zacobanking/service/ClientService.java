@@ -15,7 +15,7 @@ public interface ClientService {
 
     List<ClientAccount> getCurrencyAccounts(Integer clientId) throws ClientCurrencyAccountsNotFound, ClientNotFoundException;
 
-    WithdrawalResponse withdraw(BigDecimal withdrawalAmount, int clientId, String accountNumber, int atmId)
+    WithdrawalResponse withdraw(BigDecimal withdrawalAmount, int clientId, String accountNumber, Integer atmId)
             throws InsufficientFundsException,
             NotesAndCurrenciesNotAvailableException,
             NonWithdrawalClientAccount,

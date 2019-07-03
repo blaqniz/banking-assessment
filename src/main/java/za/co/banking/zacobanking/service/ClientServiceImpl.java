@@ -73,7 +73,7 @@ public class ClientServiceImpl implements ClientService {
     }
 
     @Override
-    public WithdrawalResponse withdraw(final BigDecimal withdrawalAmount, final int clientId, final String accountNumber, final int atmId)
+    public WithdrawalResponse withdraw(final BigDecimal withdrawalAmount, final int clientId, final String accountNumber, final Integer atmId)
             throws InsufficientFundsException, NotesAndCurrenciesNotAvailableException, NonWithdrawalClientAccount,
             AccountNotFoundException, MaxOverdraftViolationException, AtmNotRegisteredException, InvalidAmountRequested {
         if (withdrawalAmount.compareTo(BigDecimal.ZERO) > 0) {
@@ -115,10 +115,16 @@ public class ClientServiceImpl implements ClientService {
                 client.get().getClientAccounts().remove(clientAccount);
                 account.setDisplayBalance(updatedBalance);
                 client.get().getClientAccounts().add(account);
+                final List<AtmAllocation> allocations = getAtmAllocations(atmId);
+
+                withdrawalResponse.setNotesMap(response.getNotesMap());
+                deductDenominationValues(withdrawalResponse.getNotesMap(), allocations);
                 clientRepository.save(client.get());
                 withdrawalResponse.setMessage("Transaction processed successfully!");
                 withdrawalResponse.setSuccess(Boolean.TRUE);
+
                 logger.info("Transaction processed successfully!");
+
                 return withdrawalResponse;
             } else {
                 withdrawalResponse.setSuccess(Boolean.FALSE);
@@ -132,6 +138,18 @@ public class ClientServiceImpl implements ClientService {
         }
     }
 
+    private void deductDenominationValues(Map<String, String> notesMap, List<AtmAllocation> allocations) {
+        for (Map.Entry<String, String> keyValueEntry : notesMap.entrySet()) {
+            final String bankNote = keyValueEntry.getKey();
+            final String quantity = keyValueEntry.getValue();
+            for (AtmAllocation allocation : allocations) {
+                if (allocation.getDenomination().getValue().doubleValue() == Double.valueOf(bankNote)) {
+                    allocation.getDenomination().getValue().subtract(BigDecimal.valueOf(Double.valueOf(quantity)));
+                }
+            }
+        }
+    }
+
     private boolean isTransactionalAccount(final ClientAccount clientAccount) {
         return clientAccount.getAccountType().isTransactional();
     }
@@ -140,8 +158,7 @@ public class ClientServiceImpl implements ClientService {
 
         final ProcessNotesAndCoinsResponse response = new ProcessNotesAndCoinsResponse();
 
-        final List<AtmAllocation> atmAllocations = atmAllocationRepository.findAll()
-                .stream().filter(atmAllocation -> atmAllocation.getAtm().getAtmId() == atmId).collect(Collectors.toList());
+        final List<AtmAllocation> atmAllocations = getAtmAllocations(atmId);
 
         if (atmAllocations.size() == 0) {
             throw new AtmNotRegisteredException("ATM not registered or unfunded.");
@@ -153,7 +170,7 @@ public class ClientServiceImpl implements ClientService {
 
         final DecimalFormat decimalFormat = new DecimalFormat("0.00");
 
-        extractDenominatorCurrencies(withdrawalAmount, bankNotes, noteCounter, decimalFormat, atmAllocations);
+        final Map<String, String> notesMap = extractDenominatorCurrencies(withdrawalAmount, bankNotes, noteCounter, decimalFormat, atmAllocations).getNotesMap();
 
         final Map<Double, Integer> denominationCount = IntStream.range(0, bankNotes.length).filter(i -> noteCounter[i] != 0).boxed()
                 .collect(Collectors.toMap(i -> Double.valueOf(bankNotes[i]), i -> Integer.valueOf(noteCounter[i]), (a, b) -> b));
@@ -175,26 +192,37 @@ public class ClientServiceImpl implements ClientService {
         SUCCESS = (denominationValuesCount == denominationCount.entrySet().size()) ? true : false;
         response.setSuccess(SUCCESS);
         response.setTotalSuggestedAmount(totalSuggestedAmount);
+        response.setNotesMap(notesMap);
         return response;
     }
 
-    private void extractDenominatorCurrencies(double withdrawalAmount, double[] bankNotes, int[] noteCounter, DecimalFormat decimalFormat,
+    private List<AtmAllocation> getAtmAllocations(Integer atmId) {
+        return atmAllocationRepository.findAll()
+                    .stream().filter(atmAllocation -> atmAllocation.getAtm().getAtmId() == atmId).collect(Collectors.toList());
+    }
+
+    private WithdrawalResponse extractDenominatorCurrencies(double withdrawalAmount, double[] bankNotes, int[] noteCounter, DecimalFormat decimalFormat,
                                               List<AtmAllocation> atmAllocations) {
+
+        final WithdrawalResponse response = new WithdrawalResponse();
+
         for (int i = 0; i < bankNotes.length; i++) {
             final double bankNote = bankNotes[i];
             if (withdrawalAmount >= bankNote) {
 
+                final boolean noteOrCoinAvailable = isNoteOrCoinAvailable(BigDecimal.valueOf(bankNote), atmAllocations);
 
-                if (isNoteOrCoinAvailable(BigDecimal.valueOf(bankNote), atmAllocations)) {
+                /*if (noteOrCoinAvailable) {
                     noteCounter[i] = (int) (withdrawalAmount / bankNote);
                     withdrawalAmount = Double.valueOf(decimalFormat.format(withdrawalAmount - (noteCounter[i] * bankNote)));
-                }
-
+                }*/
 
                 noteCounter[i] = (int) (withdrawalAmount / bankNote);
+                response.getNotesMap().put(String.valueOf(bankNote), String.valueOf(noteCounter[i]));
                 withdrawalAmount = Double.valueOf(decimalFormat.format(withdrawalAmount - (noteCounter[i] * bankNote)));
             }
         }
+        return response;
     }
 
     private boolean isNoteOrCoinAvailable(BigDecimal bankNote, List<AtmAllocation> atmAllocations) {

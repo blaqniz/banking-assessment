@@ -4,6 +4,9 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
@@ -13,4 +16,10 @@ public class WithdrawalResponse {
 
     private String message;
 
+    private Map<String, String> notesMap = new HashMap<>();
+
+    public WithdrawalResponse(Boolean success, String message) {
+        this.success = success;
+        this.message = message;
+    }
 }
