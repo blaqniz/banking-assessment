@@ -9,7 +9,6 @@ import za.co.banking.zacobanking.repository.CurrencyConverterRepository;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -21,16 +20,10 @@ public class CurrencyConverterServiceImpl implements CurrencyConverterService {
     private static final String DIVIDE = "/";
     private static final String MULTIPLY = "*";
 
-    private ClientAccountResponse clientAccountResponse;
-    private CurrencyAccountResponse currencyAccountResponse;
-
     private CurrencyConverterRepository currencyConverterRepository;
 
-    public CurrencyConverterServiceImpl(CurrencyConverterRepository currencyConverterRepository,
-                                        ClientAccountResponse clientAccountResponse, CurrencyAccountResponse currencyAccountResponse) {
+    public CurrencyConverterServiceImpl(CurrencyConverterRepository currencyConverterRepository) {
         this.currencyConverterRepository = currencyConverterRepository;
-        this.clientAccountResponse = clientAccountResponse;
-        this.currencyAccountResponse = currencyAccountResponse;
     }
 
     @Override

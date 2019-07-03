@@ -11,19 +11,19 @@ import java.util.List;
 
 public interface ClientService {
 
-    List<ClientAccount> getTransactionalAccounts(Integer clientId) throws ClientNotFoundException;
+    List<ClientAccount> getTransactionalAccounts(Integer clientId) throws ClientNotFoundException, ClientTransactionalAccountsNotFound;
 
-    List<ClientAccount> getCurrencyAccounts(Integer clientId);
+    List<ClientAccount> getCurrencyAccounts(Integer clientId) throws ClientCurrencyAccountsNotFound, ClientNotFoundException;
 
     WithdrawalResponse withdraw(BigDecimal withdrawalAmount, int clientId, String accountNumber, int atmId)
             throws InsufficientFundsException,
             NotesAndCurrenciesNotAvailableException,
             NonWithdrawalClientAccount,
-            AccountNotFoundException, MaxOverdraftViolationException;
+            AccountNotFoundException, MaxOverdraftViolationException, AtmNotRegisteredException, InvalidAmountRequested;
 
-    ClientAccount getHighestTransactionalBalances(Integer clientId) throws ClientNotFoundException;
+    ClientAccount getHighestTransactionalBalances(Integer clientId) throws ClientTransactionalAccountsNotFound, ClientNotFoundException;
 
-    List<Client> getClientsWithHighestTransactionalBalances();
+    List<Client> getClientsWithHighestTransactionalBalances() throws ClientTransactionalAccountsNotFound, ClientNotFoundException;
 
     AggregateFinancialPositionResponse getAggregateFinancialPosition(Integer clientId);
 }
