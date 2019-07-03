@@ -16,28 +16,28 @@ USE CASES:
 
 --------------------------------------------------------------------------------------------------------------
 
-Use Case 4.2.1: Display transactional accounts with balances
+#### Use Case 4.2.1: Display transactional accounts with balances
 
 	Endpoint: 		http://localhost:8080/banking-api/transactional-accounts/1
 	Request Method: GET
 
 --------------------------------------------------------------------------------------------------------------
 
-Use Case 4.2.2: Display currency accounts with converted Rand values
+#### Use Case 4.2.2: Display currency accounts with converted Rand values
 
 	Endpoint: 		http://localhost:8080/banking-api/currency-accounts/1
 	Request Method: GET
 
 --------------------------------------------------------------------------------------------------------------
 
-Use Case 4.2.3: Withdraw cash
+#### Use Case 4.2.3: Withdraw cash
 
 	Endpoint: 		http://localhost:8080/banking-api/withdraw/250/13/1018033450/1
 	Request Method: PUT
 
 --------------------------------------------------------------------------------------------------------------
 
-Use Case 4.2.4	Reporting – Find the transactional account per client with the highest balance
+#### Use Case 4.2.4	Reporting – Find the transactional account per client with the highest balance
 
 	Endpoint: 		http://localhost:8080/banking-api/highest-transactional-balance/1
 	Request Method: GET
@@ -47,9 +47,9 @@ Use Case 4.2.4	Reporting – Find the transactional account per client with the 
 
 --------------------------------------------------------------------------------------------------------------
 
-Use Case 4.2.5: Reporting – Calculate aggregate financial position per client
+#### Use Case 4.2.5: Reporting – Calculate aggregate financial position per client
 
-	Endpoint: 		http://localhost:8080/banking-api/aggregate-financial-position/1
+	Endpoint: 	    http://localhost:8080/banking-api/aggregate-financial-position/1
 	Request Method: GET
 
 --------------------------------------------------------------------------------------------------------------
