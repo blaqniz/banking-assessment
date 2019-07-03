@@ -45,7 +45,7 @@ public class ClientServiceImpl implements ClientService {
                     .stream().sorted(Comparator.comparing(ClientAccount::getDisplayBalance).reversed())
                     .filter(clientAccount -> clientAccount.getAccountType().isTransactional()).collect(Collectors.toList());
 
-            if (clientAccounts == null) {
+            if (clientAccounts.size() == 0) {
                 throw new ClientTransactionalAccountsNotFound("No accounts to display.");
             }
 
