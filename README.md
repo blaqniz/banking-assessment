@@ -45,7 +45,7 @@ USE CASES:
 	Endpoint: 		http://localhost:8080/banking-api/clients-with-highest-transactional-balance
 	Request Method: GET
 	
-	###### SQL Script can be found in the dbscripts package: 
+	SQL Script can be found in the dbscripts package: 
 	    - dbscripts\trans-accs-max-bal.sql
 
 --------------------------------------------------------------------------------------------------------------
@@ -55,7 +55,7 @@ USE CASES:
 	Endpoint: 	    http://localhost:8080/banking-api/aggregate-financial-position/1
 	Request Method: GET
 	
-	###### SQL Script can be found in the dbscripts package: 
+	SQL Script can be found in the dbscripts package: 
     	    - dbscripts\aggr-financial-position.sql
 
 --------------------------------------------------------------------------------------------------------------
