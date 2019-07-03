@@ -40,6 +40,7 @@ public class BankingController {
             return new ResponseEntity<>(transactionalAccountResponse, HttpStatus.OK);
         } catch (ClientTransactionalAccountsNotFound e) {
             logger.error("No transactional accounts to display for client: ." + clientId, e);
+            transactionalAccountResponse.setErrorMessage(e.getMessage());
             return new ResponseEntity<>(transactionalAccountResponse, HttpStatus.OK);
         }
     }
