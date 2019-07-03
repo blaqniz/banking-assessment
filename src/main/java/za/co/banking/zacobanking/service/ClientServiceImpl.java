@@ -79,7 +79,7 @@ public class ClientServiceImpl implements ClientService {
             BigDecimal totalSuggestedAmount = BigDecimal.valueOf(0);
 
             final Optional<Client> client = clientRepository.findById(clientId);
-            final Optional<ClientAccount> clientAccount = client.orElse(null).getClientAccounts()
+            final Optional<ClientAccount> clientAccount = client.get().getClientAccounts()
                     .stream().filter(account -> account.getClientAccountNumber().equals(accountNumber)).findFirst();
 
             final WithdrawalResponse withdrawalResponse = new WithdrawalResponse();
@@ -90,19 +90,21 @@ public class ClientServiceImpl implements ClientService {
             }
 
             final ClientAccount account = clientAccount.get();
+            final BigDecimal maxOverdraft = BigDecimal.valueOf(10000.00);
             final boolean isTransactionalAccount = isTransactionalAccount(account);
+
             if (!isTransactionalAccount) {
                 withdrawalResponse.setSuccess(Boolean.FALSE);
                 throw new NonWithdrawalClientAccount("The account you have selected does not allow withdrawals. You can only withdraw from a transactional account.");
-            }
-
-            final BigDecimal maxOverdraft = BigDecimal.valueOf(10000.00);
-            if (!account.getAccountType().getAccountTypeCode().equals(CHEQUE_ACCOUNT) &&
+            } else if (!account.getAccountType().getAccountTypeCode().equals(CHEQUE_ACCOUNT) &&
                     account.getDisplayBalance().compareTo(withdrawalAmount) < 0 && withdrawalAmount != BigDecimal.ZERO) {
                 throw new InsufficientFundsException("Insufficient funds.");
-            } else if (account.getAccountType().getAccountTypeCode().equals(CHEQUE_ACCOUNT) &&
-                    BigDecimal.valueOf(Math.abs(account.getDisplayBalance().subtract(withdrawalAmount).doubleValue())).compareTo(maxOverdraft) > 0) {
-                throw new MaxOverdraftViolationException("Insufficient funds. You tried to exceed your overdraft limit of R10 000.00.");
+            } else if (account.getAccountType().getAccountTypeCode().equals(CHEQUE_ACCOUNT) && account.getDisplayBalance().compareTo(BigDecimal.ZERO) < 0) {
+                final boolean isOverdraftExceeded = BigDecimal.valueOf(Math.abs(account.getDisplayBalance()
+                        .subtract(withdrawalAmount).doubleValue())).compareTo(maxOverdraft) > 0;
+                if (isOverdraftExceeded) {
+                    throw new MaxOverdraftViolationException("Insufficient funds. You tried to exceed your overdraft limit of R10 000.00.");
+                }
             }
 
             final ProcessNotesAndCoinsResponse response = processNotesAndCoins(withdrawalAmount.doubleValue(), atmId, totalSuggestedAmount);
@@ -150,7 +152,7 @@ public class ClientServiceImpl implements ClientService {
 
         final DecimalFormat decimalFormat = new DecimalFormat("0.00");
 
-        extractDenominatorCurrencies(withdrawalAmount, bankNotes, noteCounter, decimalFormat);
+        extractDenominatorCurrencies(withdrawalAmount, bankNotes, noteCounter, decimalFormat, atmAllocations);
 
         final Map<Double, Integer> denominationCount = IntStream.range(0, bankNotes.length).filter(i -> noteCounter[i] != 0).boxed()
                 .collect(Collectors.toMap(i -> Double.valueOf(bankNotes[i]), i -> Integer.valueOf(noteCounter[i]), (a, b) -> b));
@@ -175,13 +177,24 @@ public class ClientServiceImpl implements ClientService {
         return response;
     }
 
-    private void extractDenominatorCurrencies(double withdrawalAmount, double[] bankNotes, int[] noteCounter, DecimalFormat decimalFormat) {
+    private void extractDenominatorCurrencies(double withdrawalAmount, double[] bankNotes, int[] noteCounter, DecimalFormat decimalFormat,
+                                              List<AtmAllocation> atmAllocations) {
         for (int i = 0; i < bankNotes.length; i++) {
-            if (withdrawalAmount >= bankNotes[i]) {
-                noteCounter[i] = (int) (withdrawalAmount / bankNotes[i]);
-                withdrawalAmount = Double.valueOf(decimalFormat.format(withdrawalAmount - (noteCounter[i] * bankNotes[i])));
+            final double bankNote = bankNotes[i];
+            if (withdrawalAmount >= bankNote) {
+                /*if (isNoteOrCoinAvailable(BigDecimal.valueOf(bankNote), atmAllocations)) {
+                    noteCounter[i] = (int) (withdrawalAmount / bankNote);
+                    withdrawalAmount = Double.valueOf(decimalFormat.format(withdrawalAmount - (noteCounter[i] * bankNote)));
+                }*/
+                noteCounter[i] = (int) (withdrawalAmount / bankNote);
+                withdrawalAmount = Double.valueOf(decimalFormat.format(withdrawalAmount - (noteCounter[i] * bankNote)));
             }
         }
+    }
+
+    private boolean isNoteOrCoinAvailable(BigDecimal bankNote, List<AtmAllocation> atmAllocations) {
+        return atmAllocations.stream().filter(atmAllocation -> atmAllocation.getDenomination().getValue().compareTo(bankNote) == 0)
+                .findFirst().isPresent();
     }
 
     @Override
