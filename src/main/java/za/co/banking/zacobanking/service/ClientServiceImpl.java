@@ -204,9 +204,8 @@ public class ClientServiceImpl implements ClientService {
             final ClientAccount maxBalanceAccount = clientTransactionalAccounts.stream()
                     .max(Comparator.comparing(ClientAccount::getDisplayBalance)).orElse(null);
             return maxBalanceAccount;
-        } else {
-            throw new ClientTransactionalAccountsNotFound("No accounts to display.");
         }
+        return null;
     }
 
     @Override
