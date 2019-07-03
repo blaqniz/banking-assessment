@@ -23,6 +23,7 @@ import java.util.stream.IntStream;
 public class ClientServiceImpl implements ClientService {
 
     private static final String CHEQUE_ACCOUNT = "CHQ";
+    private static final String CURRENCY_ACCOUNT = "CFCA";
     private static boolean SUCCESS = false;
     private static Logger logger = LoggerFactory.getLogger(ClientServiceImpl.class);
     private ClientRepository clientRepository;
@@ -58,7 +59,7 @@ public class ClientServiceImpl implements ClientService {
         final Optional<Client> client = clientRepository.findById(clientId);
         if (client.isPresent()) {
             final List<ClientAccount> currencyAccounts = client.get().getClientAccounts()
-                    .stream().filter(clientAccount -> !clientAccount.getAccountType().isTransactional()).collect(Collectors.toList());
+                    .stream().filter(clientAccount -> clientAccount.getAccountType().getAccountTypeCode().equals(CURRENCY_ACCOUNT)).collect(Collectors.toList());
 
             if (currencyAccounts.size() == 0) {
                 throw new ClientCurrencyAccountsNotFound("No accounts to display.");
