@@ -141,15 +141,8 @@ public class ClientServiceImpl implements ClientService {
     }
 
     private void deductDenominationValues(Map<String, String> notesMap, List<AtmAllocation> allocations) {
-        for (Map.Entry<String, String> keyValueEntry : notesMap.entrySet()) {
-            final String bankNote = keyValueEntry.getKey();
-            final String quantity = keyValueEntry.getValue();
-            for (AtmAllocation allocation : allocations) {
-                if (allocation.getDenomination().getValue().doubleValue() == Double.valueOf(bankNote)) {
-                    allocation.getDenomination().getValue().subtract(BigDecimal.valueOf(Double.valueOf(quantity)));
-                }
-            }
-        }
+        notesMap.forEach((bankNote, quantity) -> allocations.stream().filter(allocation -> allocation.getDenomination().getValue().doubleValue() == Double.valueOf(bankNote))
+                .forEach(allocation -> allocation.getDenomination().getValue().subtract(BigDecimal.valueOf(Double.valueOf(quantity)))));
     }
 
     private boolean isTransactionalAccount(final ClientAccount clientAccount) {
